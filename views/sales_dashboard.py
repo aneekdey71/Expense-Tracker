@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # 👉 File inside csv folder
-DATA_FILE = "csv/expenses.csv"
+DATA_FILE = "expenses.csv"
 
 # ======================================================
 # LOAD DATA
