@@ -2,48 +2,16 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import date
-import os
 
 # ======================================================
-# CONFIG
+# SESSION DATA (NO FILES)
 # ======================================================
-st.set_page_config(
-    page_title="Expense Tracker Pro",
-    page_icon="💰",
-    layout="wide"
-)
+if "expenses" not in st.session_state:
+    st.session_state.expenses = pd.DataFrame(
+        columns=["Date", "Category", "Amount", "Note"]
+    )
 
-# 👉 File inside csv folder
-DATA_FILE = "expenses.csv"
-
-# ======================================================
-# LOAD DATA
-# ======================================================
-def load_data():
-    try:
-        df = pd.read_csv(DATA_FILE)
-
-        if not df.empty:
-            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-            df = df.dropna(subset=["Date"])
-        else:
-            df = pd.DataFrame(columns=["Date", "Category", "Amount", "Note"])
-
-    except:
-        df = pd.DataFrame(columns=["Date", "Category", "Amount", "Note"])
-
-    return df
-
-
-# ======================================================
-# SAVE DATA
-# ======================================================
-def save_data(df):
-    os.makedirs("csv", exist_ok=True)
-    df.to_csv(DATA_FILE, index=False)
-
-
-df = load_data()
+df = st.session_state.expenses
 
 # ======================================================
 # TITLE
@@ -51,7 +19,7 @@ df = load_data()
 st.title("💰 Expense Tracker Dashboard")
 
 # ======================================================
-# ADD EXPENSE FORM
+# ADD EXPENSE
 # ======================================================
 st.subheader("➕ Add New Expense")
 
@@ -84,8 +52,9 @@ if add_btn:
             "Note": [note]
         })
 
-        df = pd.concat([df, new_row], ignore_index=True)
-        save_data(df)
+        st.session_state.expenses = pd.concat(
+            [df, new_row], ignore_index=True
+        )
 
         st.success("Expense added successfully ✅")
         st.rerun()
@@ -93,11 +62,13 @@ if add_btn:
     else:
         st.error("Amount must be greater than 0 ⚠️")
 
+df = st.session_state.expenses
 
 # ======================================================
 # METRICS
 # ======================================================
 total_spent = df["Amount"].sum()
+
 today_spent = (
     df[df["Date"].dt.date == date.today()]["Amount"].sum()
     if not df.empty else 0
@@ -107,8 +78,7 @@ col1, col2, col3 = st.columns(3)
 
 col1.metric("💸 Total Spent", f"₹{total_spent:,.2f}")
 col2.metric("📅 Today", f"₹{today_spent:,.2f}")
-col3.metric("🧾 Total Entries", len(df))
-
+col3.metric("🧾 Entries", len(df))
 
 # ======================================================
 # TABLE
@@ -116,11 +86,12 @@ col3.metric("🧾 Total Entries", len(df))
 st.subheader("📋 Expense History")
 
 if not df.empty:
-    st.dataframe(df.sort_values("Date", ascending=False),
-                 use_container_width=True)
+    st.dataframe(
+        df.sort_values("Date", ascending=False),
+        use_container_width=True
+    )
 else:
-    st.info("No expenses yet — start by adding one 👆")
-
+    st.info("No expenses yet — add one 👆")
 
 # ======================================================
 # CHARTS
@@ -148,20 +119,6 @@ if not df.empty:
         ax2.set_xlabel("Amount (₹)")
         st.pyplot(fig2)
 
-    # Monthly
-    st.subheader("📅 Monthly Spending")
-
-    df["Month"] = df["Date"].dt.to_period("M")
-    monthly = df.groupby("Month")["Amount"].sum()
-
-    fig3, ax3 = plt.subplots()
-    monthly.plot(kind="bar", ax=ax3)
-
-    ax3.set_xlabel("Month")
-    ax3.set_ylabel("Amount (₹)")
-    st.pyplot(fig3)
-
-
 # ======================================================
 # CHATBOT
 # ======================================================
@@ -185,7 +142,7 @@ if user_input:
     text = user_input.lower()
 
     if df.empty:
-        reply = "⚠️ Add some expenses first."
+        reply = "⚠️ Add expenses first."
 
     elif "total" in text:
         reply = f"You spent ₹{total_spent:,.2f} 💸"
@@ -195,7 +152,10 @@ if user_input:
 
     elif "biggest" in text:
         max_row = df.loc[df["Amount"].idxmax()]
-        reply = f"Biggest expense: ₹{max_row['Amount']} on {max_row['Category']} 💣"
+        reply = (
+            f"Biggest expense: ₹{max_row['Amount']} "
+            f"on {max_row['Category']} 💣"
+        )
 
     else:
         reply = "Ask about total, today, or biggest expense 🤖"
@@ -206,15 +166,14 @@ if user_input:
 
     st.rerun()
 
-
 # ======================================================
-# SAFE CLEAR DATA
+# CLEAR DATA
 # ======================================================
 st.subheader("⚠️ Clear All Data")
 
 if st.button("Clear All Expenses"):
-    empty_df = pd.DataFrame(columns=["Date", "Category", "Amount", "Note"])
-    save_data(empty_df)
-
+    st.session_state.expenses = pd.DataFrame(
+        columns=["Date", "Category", "Amount", "Note"]
+    )
     st.success("All data cleared ✅")
     st.rerun()
