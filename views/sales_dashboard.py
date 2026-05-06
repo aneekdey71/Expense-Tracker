@@ -3,9 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import date
 
-# ======================================================
 # SESSION DATA (NO FILES)
-# ======================================================
+
 if "expenses" not in st.session_state:
     st.session_state.expenses = pd.DataFrame(
         columns=["Date", "Category", "Amount", "Note"]
@@ -13,14 +12,12 @@ if "expenses" not in st.session_state:
 
 df = st.session_state.expenses
 
-# ======================================================
 # TITLE
-# ======================================================
+
 st.title("💰 Expense Tracker Dashboard")
 
-# ======================================================
 # ADD EXPENSE
-# ======================================================
+
 st.subheader("➕ Add New Expense")
 
 with st.form("expense_form", clear_on_submit=True):
@@ -64,9 +61,9 @@ if add_btn:
 
 df = st.session_state.expenses
 
-# ======================================================
+
 # METRICS
-# ======================================================
+
 total_spent = df["Amount"].sum()
 
 today_spent = (
@@ -80,9 +77,9 @@ col1.metric("💸 Total Spent", f"₹{total_spent:,.2f}")
 col2.metric("📅 Today", f"₹{today_spent:,.2f}")
 col3.metric("🧾 Entries", len(df))
 
-# ======================================================
+
 # TABLE
-# ======================================================
+
 st.subheader("📋 Expense History")
 
 if not df.empty:
@@ -93,9 +90,9 @@ if not df.empty:
 else:
     st.info("No expenses yet — add one 👆")
 
-# ======================================================
+
 # CHARTS
-# ======================================================
+
 if not df.empty:
 
     st.subheader("📊 Spending Insights")
@@ -119,9 +116,9 @@ if not df.empty:
         ax2.set_xlabel("Amount (₹)")
         st.pyplot(fig2)
 
-# ======================================================
+
 # CHATBOT
-# ======================================================
+
 st.subheader("🤖 Smart Expense Assistant")
 
 if "messages" not in st.session_state:
@@ -166,9 +163,9 @@ if user_input:
 
     st.rerun()
 
-# ======================================================
+
 # CLEAR DATA
-# ======================================================
+
 st.subheader("⚠️ Clear All Data")
 
 if st.button("Clear All Expenses"):
